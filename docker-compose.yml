@@ -1,0 +1,37 @@
+services:
+  gateway:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DB_PATH: /app/data/gateway.db
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+
+  # ---- Optional self-hosted providers (profiles: providers) ----
+  # Start with: docker compose --profile providers up -d
+  #
+  # vllm:
+  #   image: vllm/vllm-openai:latest
+  #   profiles: ["providers"]
+  #   ports: ["8001:8000"]
+  #   command: ["--model", "Qwen/Qwen3-8B", "--max-model-len", "32768"]
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+  #
+  # llamacpp:
+  #   image: ghcr.io/ggerganov/llama.cpp:server
+  #   profiles: ["providers"]
+  #   ports: ["8080:8080"]
+  #   volumes: ["./models:/models"]
+  #   command: ["-m", "/models/model.gguf", "--port", "8080"]

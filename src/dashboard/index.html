@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEJOIY AI Gateway — Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f1420; color: #e6e9f0; margin: 0; padding: 24px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #8b93a7; font-size: 13px; margin-bottom: 20px; }
+  .cards { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .card { background: #182030; border: 1px solid #26314a; border-radius: 10px; padding: 14px 18px; min-width: 140px; }
+  .card .label { font-size: 11px; color: #8b93a7; text-transform: uppercase; letter-spacing: .5px; }
+  .card .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; background: #182030; border-radius: 10px; overflow: hidden; }
+  th, td { padding: 10px 14px; text-align: left; font-size: 13px; }
+  th { background: #1f2940; color: #8b93a7; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+  tr + tr td { border-top: 1px solid #26314a; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+  .HEALTHY { background: #34d399; } .DEGRADED { background: #fbbf24; } .BUSY { background: #60a5fa; }
+  .RATE_LIMITED { background: #f97316; } .UNAVAILABLE { background: #ef4444; }
+  .RECOVERING { background: #a78bfa; } .DRAINING { background: #6b7280; }
+  .mono { font-family: ui-monospace, monospace; font-size: 12px; }
+  .err { color: #ef4444; padding: 12px; background: #2a1620; border-radius: 8px; margin-bottom: 16px; display: none; }
+  .foot { margin-top: 18px; color: #8b93a7; font-size: 12px; }
+  code { background: #1f2940; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>◈ DEJOIY AI Gateway</h1>
+<div class="sub">Unified model router · OpenAI-compatible · auto-failover</div>
+<div class="err" id="err"></div>
+<div class="cards">
+  <div class="card"><div class="label">Status</div><div class="value" id="c-status">–</div></div>
+  <div class="card"><div class="label">Uptime</div><div class="value" id="c-uptime">–</div></div>
+  <div class="card"><div class="label">Providers</div><div class="value" id="c-prov">–</div></div>
+  <div class="card"><div class="label">Healthy</div><div class="value" id="c-healthy">–</div></div>
+</div>
+<table>
+  <thead><tr>
+    <th>Provider</th><th>Status</th><th>Latency</th><th>Score</th><th>Active</th>
+    <th>Requests</th><th>Errors</th><th>Circuit</th><th>Last check</th>
+  </tr></thead>
+  <tbody id="rows"><tr><td colspan="9">loading…</td></tr></tbody>
+</table>
+<div class="foot">
+  Bots use <code>POST /v1/chat/completions</code> with a logical model (<code>kaali-fast</code>, <code>kaali-smart</code>, <code>kaali-premium</code>).
+  Metrics: <code>/metrics</code> · Health: <code>/health</code>
+</div>
+<script>
+const errBox = document.getElementById('err');
+function ago(ts) {
+  if (!ts) return '–';
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return s + 's ago';
+  return Math.floor(s / 60) + 'm ago';
+}
+async function refresh() {
+  try {
+    const [h, p] = await Promise.all([
+      fetch('/health').then(r => r.json()),
+      fetch('/health/providers').then(r => r.json()),
+    ]);
+    errBox.style.display = 'none';
+    document.getElementById('c-status').textContent = h.status === 'ok' ? '● OK' : '● DEGRADED';
+    const up = h.uptime_seconds || 0;
+    document.getElementById('c-uptime').textContent =
+      up > 3600 ? Math.floor(up/3600)+'h '+Math.floor(up%3600/60)+'m' : Math.floor(up/60)+'m';
+    document.getElementById('c-prov').textContent = p.length;
+    document.getElementById('c-healthy').textContent = p.filter(x => x.health.state === 'HEALTHY').length;
+    document.getElementById('rows').innerHTML = p.map(x => `
+      <tr>
+        <td class="mono"><strong>${x.name}</strong></td>
+        <td><span class="dot ${x.health.state}"></span>${x.health.state}${x.draining ? ' (draining)' : ''}</td>
+        <td class="mono">${x.health.latencyMs}ms</td>
+        <td class="mono">${(x.score||0).toFixed(3)}</td>
+        <td class="mono">${x.activeRequests}</td>
+        <td class="mono">${x.totalRequests}</td>
+        <td class="mono">${x.totalErrors}</td>
+        <td class="mono">${x.circuit}</td>
+        <td class="mono">${ago(x.health.lastCheckAt)}</td>
+      </tr>`).join('');
+  } catch (e) {
+    errBox.textContent = 'Failed to reach gateway: ' + e.message;
+    errBox.style.display = 'block';
+  }
+}
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
