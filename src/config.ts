@@ -24,7 +24,8 @@ export type ProviderKey =
   | "gemini"
   | "groq"
   | "openrouter"
-  | "cerebras";
+  | "cerebras"
+  | "pollinations";
 
 export const PROVIDER_KEYS: ProviderKey[] = [
   "vllm",
@@ -38,6 +39,7 @@ export const PROVIDER_KEYS: ProviderKey[] = [
   "groq",
   "openrouter",
   "cerebras",
+  "pollinations",
 ];
 
 export interface GatewayConfig {
@@ -84,6 +86,7 @@ const PROVIDER_DEFAULTS: Record<ProviderKey, ProviderDefaults> = {
   groq: { url: "https://api.groq.com/openai/v1", model: "llama-3.1-8b-instant" },
   openrouter: { url: "https://openrouter.ai/api/v1", model: "qwen/qwen3-32b:free" },
   cerebras: { url: "https://api.cerebras.ai/v1", model: "llama3.1-8b" },
+  pollinations: { url: "https://text.pollinations.ai/openai", model: "openai" },
 };
 
 const PROVIDER_ENV_PREFIX: Record<ProviderKey, string> = {
@@ -98,6 +101,7 @@ const PROVIDER_ENV_PREFIX: Record<ProviderKey, string> = {
   groq: "GROQ",
   openrouter: "OPENROUTER",
   cerebras: "CEREBRAS",
+  pollinations: "POLLINATIONS",
 };
 
 function defaultLogicalModels(): LogicalModelMapping[] {
@@ -115,6 +119,8 @@ function defaultLogicalModels(): LogicalModelMapping[] {
         { provider: "llamacpp", model: "default", weight: 1 },
         { provider: "tgi", model: "Qwen3-8B", weight: 1 },
         { provider: "koboldcpp", model: "koboldcpp", weight: 1 },
+        // Keyless last-resort failover — always available, no API key needed.
+        { provider: "pollinations", model: "openai", weight: 1 },
       ],
     },
     {
@@ -202,8 +208,12 @@ function parseProviderConfig(
   const prefix = PROVIDER_ENV_PREFIX[key];
   const defaults = PROVIDER_DEFAULTS[key];
   const apiKey = str(env, `${prefix}_API_KEY`, "");
+  // Pollinations is keyless by design — enable it by default as the
+  // always-available last-resort failover. Every other provider stays
+  // opt-in so a missing key can never take the gateway down.
+  const enabledDefault = key === "pollinations";
   return {
-    enabled: bool(env, `${prefix}_ENABLED`, false),
+    enabled: bool(env, `${prefix}_ENABLED`, enabledDefault),
     url: str(env, `${prefix}_URL`, defaults.url),
     apiKey: apiKey === "" ? undefined : apiKey,
     model: str(env, `${prefix}_MODEL`, defaults.model),

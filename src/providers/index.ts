@@ -15,6 +15,7 @@ import { createGeminiProvider } from "./gemini/index.js";
 import { createGroqProvider } from "./groq/index.js";
 import { createOpenrouterProvider } from "./openrouter/index.js";
 import { createCerebrasProvider } from "./cerebras/index.js";
+import { createPollinationsProvider } from "./pollinations/index.js";
 
 export const ALL_PROVIDER_KEYS: ProviderKey[] = [
   "vllm",
@@ -28,6 +29,7 @@ export const ALL_PROVIDER_KEYS: ProviderKey[] = [
   "groq",
   "openrouter",
   "cerebras",
+  "pollinations",
 ];
 
 const FACTORIES: Record<ProviderKey, (cfg: GatewayConfig["providers"][ProviderKey]) => AIProvider> = {
@@ -42,6 +44,7 @@ const FACTORIES: Record<ProviderKey, (cfg: GatewayConfig["providers"][ProviderKe
   groq: createGroqProvider,
   openrouter: createOpenrouterProvider,
   cerebras: createCerebrasProvider,
+  pollinations: createPollinationsProvider,
 };
 
 export function createProviders(config: GatewayConfig): Map<string, AIProvider> {
