@@ -83,7 +83,7 @@ const PROVIDER_DEFAULTS: Record<ProviderKey, ProviderDefaults> = {
     url: "https://generativelanguage.googleapis.com/v1beta/openai",
     model: "gemini-2.0-flash",
   },
-  groq: { url: "https://api.groq.com/openai/v1", model: "llama-3.1-8b-instant" },
+  groq: { url: "https://api.groq.com/openai/v1", model: "openai/gpt-oss-20b" },
   openrouter: { url: "https://openrouter.ai/api/v1", model: "qwen/qwen3-32b:free" },
   cerebras: { url: "https://api.cerebras.ai/v1", model: "llama3.1-8b" },
   pollinations: { url: "https://text.pollinations.ai/openai", model: "openai" },
@@ -109,7 +109,7 @@ function defaultLogicalModels(): LogicalModelMapping[] {
     {
       logicalModel: "kaali-fast",
       providers: [
-        { provider: "groq", model: "llama-3.1-8b-instant", weight: 1 },
+        { provider: "groq", model: "openai/gpt-oss-20b", weight: 1 },
         { provider: "gemini", model: "gemini-2.0-flash", weight: 1 },
         { provider: "cerebras", model: "llama3.1-8b", weight: 1 },
         { provider: "openrouter", model: "qwen/qwen3-32b:free", weight: 1 },
@@ -127,7 +127,7 @@ function defaultLogicalModels(): LogicalModelMapping[] {
       logicalModel: "kaali-smart",
       providers: [
         { provider: "gemini", model: "gemini-2.5-flash", weight: 1 },
-        { provider: "groq", model: "llama-3.3-70b-versatile", weight: 1 },
+        { provider: "groq", model: "openai/gpt-oss-120b", weight: 1 },
         {
           provider: "openrouter",
           model: "meta-llama/llama-3.3-70b-instruct:free",
@@ -142,7 +142,7 @@ function defaultLogicalModels(): LogicalModelMapping[] {
       logicalModel: "kaali-premium",
       providers: [
         { provider: "gemini", model: "gemini-2.5-pro", weight: 1 },
-        { provider: "groq", model: "llama-3.3-70b-versatile", weight: 1 },
+        { provider: "groq", model: "openai/gpt-oss-120b", weight: 1 },
         {
           provider: "openrouter",
           model: "qwen/qwen3-235b-a22b:free",
