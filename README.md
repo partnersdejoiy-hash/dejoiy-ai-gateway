@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/dejoiy-joi-on-dark.svg">
+  <img src="docs/brand/dejoiy-joi.svg" alt=":Dejoiy Joi" height="48">
+</picture>
+
 # DEJOIY AI Gateway
 
 A production-ready, self-hosted **AI inference gateway** — one OpenAI-compatible API in front of many inference engines, with automatic failover, health checks, circuit breakers, smart routing, request queueing, and observability.
